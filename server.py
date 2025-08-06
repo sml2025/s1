@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string, Response
+from flask import Flask, request, jsonify, render_template_string, Response, send_from_directory
 from flask_cors import CORS
 import sqlite3
 import smtplib
@@ -7,8 +7,18 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', static_url_path='/static')
 CORS(app)
+
+# 静态文件路由
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # 特别处理视频文件
+    if filename.endswith(('.mov', '.mp4', '.gif')):
+        response = send_from_directory('.', filename)
+        response.headers['Content-Type'] = 'video/quicktime' if filename.endswith('.mov') else 'video/mp4' if filename.endswith('.mp4') else 'image/gif'
+        return response
+    return send_from_directory('.', filename)
 
 # 数据库配置
 DATABASE = 'consultations.db'
@@ -107,7 +117,7 @@ def submit_consultation():
         conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO consultations (name, phone, email, consultation_type, message)
+            INSERT INTO consultations (name, contact, email, consultation_type, message)
             VALUES (?, ?, ?, ?, ?)
         ''', (
             data['name'],
@@ -884,6 +894,10 @@ def admin():
     </html>
     ''')
 
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
+
 if __name__ == '__main__':
     # 初始化数据库
     init_db()
@@ -894,4 +908,4 @@ if __name__ == '__main__':
     print("用户名: kaiwen")
     print("密码: 11112222")
     
-    app.run(host='0.0.0.0', port=5001, debug=True) 
+    app.run(host='0.0.0.0', port=5002, debug=True)

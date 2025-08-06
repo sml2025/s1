@@ -39,7 +39,7 @@ def main():
         return
     
     print("\n启动信息:")
-    print("🌐 后台管理地址: http://localhost:5000/admin")
+    print("🌐 后台管理地址: http://localhost:5002/admin")
     print("👤 用户名: kaiwen")
     print("🔑 密码: 11112222")
     print("📧 邮件接收: kaiwen0151@163.com")
@@ -50,5 +50,5 @@ def main():
     start_server()
 
 if __name__ == "__main__":
-    main() 
+    main()
  

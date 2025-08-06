@@ -1,22 +1,29 @@
 document.addEventListener('DOMContentLoaded', function() {
+
+    // 检查导航元素是否存在
     const navToggle = document.querySelector('.nav-toggle');
     const navMenu = document.querySelector('.nav-menu');
     const navbar = document.querySelector('.navbar');
 
-    // 移动端菜单切换
-    navToggle.addEventListener('click', function() {
-        navMenu.classList.toggle('active');
-        navToggle.classList.toggle('active');
-    });
+    // 仅当所有元素都存在时才执行后续代码
+    if (navToggle && navMenu && navbar) {
+        // 移动端菜单切换
+        navToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+            navToggle.classList.toggle('active');
+        });
 
-    // 滚动时导航栏样式变化
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 100) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
+        // 滚动时导航栏样式变化
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    } else {
+        console.log('导航元素不存在，跳过导航功能初始化');
+    }
 
     // 平滑滚动到锚点
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -970,4 +977,4 @@ if ('serviceWorker' in navigator) {
                 console.log('SW registration failed: ', registrationError);
             });
     });
-} 
+}

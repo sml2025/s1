@@ -65,23 +65,39 @@ body {
     line-height: 1.6;
     color: var(--text-primary);
     overflow-x: hidden;
-    background: url('xingkong.PNG') no-repeat center center fixed;
-    background-size: cover;
     position: relative;
+    background-color: #000;
 }
 
-body::before {
-    content: '';
+.bg-video-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('xingkong.PNG') no-repeat center center;
-    background-size: cover;
-    opacity: 0.8;
+    overflow: hidden;
     z-index: -1;
-    animation: starfield 20s linear infinite;
+}
+
+.bg-video {
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 视频背景的覆盖层 */
+.bg-video-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* 调整透明度以获得更好的文字可读性 */
 }
 
 @keyframes starfield {
@@ -199,13 +215,12 @@ body::before {
 /* 主页横幅 */
 .hero {
     min-height: 200vh;
-    background: url('xingkong.PNG') no-repeat center center;
-    background-size: cover;
     display: flex;
     align-items: flex-start;
     position: relative;
     overflow: hidden;
     padding-top: 0;
+    z-index: 1;
 }
 
 .hero::before {
@@ -362,6 +377,7 @@ body::before {
 .hero-buttons {
     display: flex;
     gap: 20px;
+    justify-content: center;
 }
 
 .btn-primary, .btn-secondary {

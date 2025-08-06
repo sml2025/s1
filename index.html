@@ -27,6 +27,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- 背景视频 -->
+    <div class="bg-video-container">
+        <video class="bg-video" autoplay loop playsinline muted>
+            <source src="background.mp4" type="video/mp4">
+            <!-- 回退到GIF如果视频无法播放 -->
+            <img src="background.gif" alt="背景图像">
+        </video>
+
+    </div>
     <!-- 导航栏 -->
     <nav class="navbar">
         <div class="nav-container">
@@ -105,6 +114,10 @@
                     <div class="stat-item">
                         <span class="stat-number">23</span>
                         <span class="stat-label">核心能力</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">95%</span>
+                        <span class="stat-label">有效率</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-number">100%</span>
@@ -480,7 +493,7 @@
                     </div>
                     <div class="founder-info">
                         <h3>Kaiwen</h3>
-                        <p class="founder-title">生命力教练/教育咨询工作室 创始人 & 首席导师</p>
+                        <p class="founder-title">生命力教练/教育咨询工作室 创始人 & 首席教练</p>
                         <div class="founder-credentials">
                             <span>北京大学客座讲师</span>
                             <span>北大《教育与幸福》本科课助教</span>
@@ -496,11 +509,12 @@
                             <div class="quote-card">
                                 <h4>北大文教授评价</h4>
                                 <p>"生命力教育咨询这份事业真的很有意义，祝贺你。你不会退休，谢幕时会有很多很多人为你流泪！"</p>
-                                <span class="quote-author">— 原北大教育学院院长</span>
+                                <span class="quote-author">— 北大教育学院老院长</span>
                             </div>
                             <div class="quote-card">
                                 <h4>复旦孙教授评价</h4>
-                                <p>"你是开发老年人口红利（退休教授当大中小学生导师）的探索者，别人帮老人理财富，你帮老人理智慧。"</p>
+                                <p>"我想请你来当这门课的助教，你可以把我当成生命力教育的教授，选修同学当成你们的学生，你来设计课堂。2018.9.25
+"</p>
                                 <span class="quote-author">— 复旦心理学系主任</span>
                             </div>
                         </div>
@@ -508,19 +522,31 @@
                 </div>
             </div>
             
-            <!-- 青春导师团队 -->
+            <!-- 青年教练团队 -->
             <div class="team-section">
-                <h3 class="team-subtitle">青春导师团队</h3>
+                <h3 class="team-subtitle">国际教练团队</h3>
                 <div class="team-grid">
                     <div class="team-card">
                         <div class="team-avatar">
                             <i class="fas fa-user-graduate"></i>
                         </div>
-                        <h3>T老师</h3>
-                        <p class="team-title">哈佛大学导师</p>
+                        <h3>Z老师</h3>
+                        <p class="team-title">复旦大学哲学博士</p>
                         <div class="team-credentials">
-                            <span>美国哈佛大学城市建筑和房地产专业本科</span>
-                            <span>清华苏世民书院硕士</span>
+                            <span>复旦大学哲学博士</span>
+                              <span>生命力教练合伙人</span>
+                              <span>超级奶爸</span>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3>T老师</h3>
+                        <p class="team-title">哈佛大学本科</p>
+                        <div class="team-credentials">
+                            <span>美国哈佛大学城市建筑和房地产本科</span>
+                            <span>清华苏世民学者/硕士</span>
                             <span>哈佛肯尼迪学院社会创新研究员</span>
                             <span>《福布斯》U30精英奖</span>
                             <span>GBCC十大杰出青年领袖奖</span>
@@ -533,8 +559,7 @@
                         </div>
                         <h3>W老师</h3>
                         <p class="team-title">哈佛教育学硕士</p>
-                        <div class="team-credentials">
-                            <span>美国哈佛大学教育学硕士</span>
+                        <div class="team-credentials">                   
                             <span>复旦十佳优秀本科毕业生</span>
                             <span>复旦外语系绩点第一名</span>
                         </div>
@@ -562,7 +587,7 @@
                         <h3>O老师</h3>
                         <p class="team-title">清华苏世民书院硕士</p>
                         <div class="team-credentials">
-                            <span>清华苏世民书院硕士</span>
+                            <span>清华苏世民学者/硕士</span>
                             <span>安永会计师事务所纽约/香港高级顾问</span>
                         </div>
                     </div>
@@ -1084,4 +1109,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
