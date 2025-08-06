@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理系统 - 生命力教育咨询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .dashboard {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .dashboard-header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .consultations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .consultations-table th,
+        .consultations-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .consultations-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .consultations-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginForm">
+        <div class="login-header">
+            <h1>后台管理系统</h1>
+            <p>生命力教育咨询工作室</p>
+        </div>
+        <form id="loginFormElement">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-btn">登录</button>
+        </form>
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="dashboard-header">
+            <h1>咨询表单管理</h1>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="totalConsultations">0</h3>
+                <p>总咨询数</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="todayConsultations">0</h3>
+                <p>今日咨询</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="pendingConsultations">0</h3>
+                <p>待处理</p>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="loadConsultations()">刷新数据</button>
+        
+        <div id="consultationsContainer">
+            <table class="consultations-table" id="consultationsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>姓名</th>
+                        <th>电话</th>
+                        <th>邮箱</th>
+                        <th>咨询类型</th>
+                        <th>咨询内容</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody id="consultationsTableBody">
+                </tbody>
+            </table>
+            <div class="no-data" id="noData">暂无咨询数据</div>
+        </div>
+    </div>
+
+    <script>
+        // 登录验证
+        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'kaiwen' && password === '11112222') {
+                // 登录成功
+                localStorage.setItem('adminLoggedIn', 'true');
+                showDashboard();
+                loadConsultations();
+            } else {
+                // 登录失败
+                showError('用户名或密码错误');
+            }
+        });
+
+        // 显示错误信息
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 显示仪表板
+        function showDashboard() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // 加载咨询数据
+        async function loadConsultations() {
+            try {
+                const response = await fetch('/api/consultations');
+                const data = await response.json();
+                
+                updateStats(data);
+                updateConsultationsTable(data.consultations);
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showError('加载数据失败，请检查网络连接');
+            }
+        }
+
+        // 更新统计信息
+        function updateStats(data) {
+            document.getElementById('totalConsultations').textContent = data.total || 0;
+            document.getElementById('todayConsultations').textContent = data.today || 0;
+            document.getElementById('pendingConsultations').textContent = data.pending || 0;
+        }
+
+        // 更新咨询表格
+        function updateConsultationsTable(consultations) {
+            const table = document.getElementById('consultationsTable');
+            const tableBody = document.getElementById('consultationsTableBody');
+            const noData = document.getElementById('noData');
+            
+            if (consultations && consultations.length > 0) {
+                table.style.display = 'table';
+                noData.style.display = 'none';
+                
+                tableBody.innerHTML = '';
+                consultations.forEach(consultation => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(consultation.timestamp).toLocaleString()}</td>
+                        <td>${consultation.name}</td>
+                        <td>${consultation.phone}</td>
+                        <td>${consultation.email}</td>
+                        <td>${consultation.consultationType}</td>
+                        <td>${consultation.message}</td>
+                        <td>${consultation.status || '新提交'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                table.style.display = 'none';
+                noData.style.display = 'block';
+            }
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            if (localStorage.getItem('adminLoggedIn') === 'true') {
+                showDashboard();
+                loadConsultations();
+            }
+        }
+
+        // 页面加载时检查登录状态
+        checkLoginStatus();
+    </script>
+</body>
+</html> 

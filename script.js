@@ -12,11 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 滚动时导航栏样式变化
     window.addEventListener('scroll', function() {
         if (window.scrollY > 100) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-            navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+            navbar.classList.add('scrolled');
         } else {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-            navbar.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            navbar.classList.remove('scrolled');
         }
     });
 
@@ -449,27 +447,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 添加打字机效果
-    function typeWriter(element, text, speed = 100) {
-        let i = 0;
-        element.innerHTML = '';
-        
-        function type() {
-            if (i < text.length) {
-                element.innerHTML += text.charAt(i);
-                i++;
-                setTimeout(type, speed);
-            }
-        }
-        
-        type();
-    }
+    // 删除打字机效果函数，不再需要
+    // function typeWriter(element, text, speed = 100) {
+    //     let i = 0;
+    //     element.innerHTML = '';
+    //     
+    //     function type() {
+    //         if (i < text.length) {
+    //             element.innerHTML += text.charAt(i);
+    //             i++;
+    //             setTimeout(type, speed);
+    //         }
+    //     }
+    //     
+    //     type();
+    // }
 
-    // 为标题添加打字机效果
-    const heroTitle = document.querySelector('.hero-title');
-    if (heroTitle) {
-        const originalText = heroTitle.textContent;
-        typeWriter(heroTitle, originalText, 150);
-    }
+    // 删除标题打字机效果，让标题直接显示
+    // const heroTitle = document.querySelector('.hero-title');
+    // if (heroTitle) {
+    //     const originalText = heroTitle.textContent;
+    //     typeWriter(heroTitle, originalText, 150);
+    // }
 
     // 添加粒子效果
     function createParticles() {
@@ -956,7 +955,7 @@ document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         document.title = '生命力教育咨询工作室 - 欢迎回来';
     } else {
-        document.title = '生命力教育咨询工作室 - 培养真我幸福的好公民';
+        document.title = '生命力教育咨询工作室 - 培养生命力长盛的个体';
     }
 });
 
