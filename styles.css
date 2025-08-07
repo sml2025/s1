@@ -89,6 +89,16 @@ body {
     transform: translate(-50%, -50%);
 }
 
+.bg-image {
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 /* 视频背景的覆盖层 */
 .bg-video-container::after {
     content: '';
