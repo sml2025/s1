@@ -3040,6 +3040,10 @@ body {
 
 /* 移动端响应式样式 */
 @media (max-width: 768px) {
+    .hero {
+        min-height: 100vh;
+    }
+
     .hero-title-container {
         flex-direction: column;
         gap: 20px;
