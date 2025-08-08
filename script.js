@@ -105,75 +105,109 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(el);
     });
 
-    // 表单处理 - 修复移动端提交问题
+    // 表单提交处理 - GitHub Pages兼容版本
     const contactForm = document.querySelector('.contact-form form');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
+            const data = {
+                name: formData.get('name'),
+                city: formData.get('city'),
+                contact: formData.get('text'),
+                consultation_type: formData.get('consultation_type'),
+                age_group: formData.get('age_group'),
+                description: formData.get('description'),
+                source: window.location.hostname.includes('github.io') ? 'GitHub Pages' : '本地服务器',
+                device: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop',
+                timestamp: new Date().toLocaleString('zh-CN')
+            };
             
-            // 添加设备信息用于调试
-            data.device_model = navigator.userAgent || '未知设备';
-            data.location = window.location.hostname;
-            
-            // 使用增强的表单验证
-            if (!validateMobileForm(this)) {
+            // 验证表单
+            if (!data.name || !data.contact || !data.consultation_type || !data.age_group || !data.description) {
+                showNotification('❌ 请填写所有必填字段', 'error');
                 return;
             }
             
+            // 验证联系方式格式（手机号或微信号）
+            const contact = data.contact.trim();
+            const isPhone = /^1[3-9]\d{9}$/.test(contact);
+            const isWeChat = /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/.test(contact) || contact.length >= 6;
+            
+            if (!isPhone && !isWeChat) {
+                showNotification('❌ 请输入正确的手机号或微信号', 'error');
+                return;
+            }
+            
+            // 禁用提交按钮
             const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = '提交中...';
-                submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '处理中...';
+            submitBtn.disabled = true;
+            
+            // 检测环境并选择处理方式
+            if (window.location.hostname.includes('github.io')) {
+                // GitHub Pages环境：使用邮箱提交
+                const subject = encodeURIComponent(`教育咨询 - ${data.name}`);
+                const body = encodeURIComponent(
+                    `【教育咨询表单】\n\n` +
+                    `姓名：${data.name}\n` +
+                    `城市：${data.city}\n` +
+                    `联系方式：${data.contact}\n` +
+                    `咨询类型：${data.consultation_type}\n` +
+                    `年龄段：${data.age_group}\n` +
+                    `需求描述：${data.description}\n\n` +
+                    `设备信息：${data.device}\n` +
+                    `提交时间：${data.timestamp}\n` +
+                    `来源：${data.source}`
+                );
                 
-                // 使用相对路径，兼容移动端和桌面端
-                const apiUrl = '/submit_consultation';
+                const mailtoLink = `mailto:kaiwen0151@163.com?subject=${subject}&body=${body}`;
                 
-                // 添加超时处理
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                showNotification('✅ 咨询信息已准备完毕！正在跳转到邮箱...', 'success');
                 
-                fetch(apiUrl, {
+                setTimeout(() => {
+                    window.location.href = mailtoLink;
+                    this.reset();
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }, 1500);
+                
+            } else {
+                // 本地服务器环境：使用后端API
+                fetch('/submit_consultation', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(data),
-                    signal: controller.signal
+                    body: JSON.stringify(data)
                 })
                 .then(response => {
-                    clearTimeout(timeoutId);
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(result => {
-                    if (result.success) {
-                        showNotification('咨询表单提交成功！我们会尽快联系您。', 'success');
-                        this.reset();
-                        // 移除所有错误样式
-                        this.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
-                    } else {
-                        showNotification('提交失败: ' + (result.message || '未知错误'), 'error');
-                    }
+                    showNotification('✅ 提交成功！我们会尽快联系您', 'success');
+                    this.reset();
                 })
                 .catch(error => {
-                    console.error('表单提交错误:', error);
+                    console.error('Error:', error);
+                    let errorMsg = '提交失败，请稍后重试';
                     if (error.name === 'AbortError') {
-                        showNotification('网络超时，请检查网络连接', 'error');
-                    } else {
-                        showNotification('提交失败，请检查网络连接或稍后重试。', 'error');
+                        errorMsg = '请求超时，请检查网络连接';
+                    } else if (error.message.includes('HTTP error')) {
+                        errorMsg = '服务器错误，请稍后重试';
+                    } else if (error.message.includes('Failed to fetch')) {
+                        errorMsg = '网络连接错误，请检查网络';
                     }
+                    showNotification('❌ ' + errorMsg, 'error');
                 })
                 .finally(() => {
-                    if (submitBtn) {
-                        submitBtn.textContent = originalText;
-                        submitBtn.disabled = false;
-                    }
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
                 });
             }
         });
