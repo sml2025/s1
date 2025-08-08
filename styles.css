@@ -212,7 +212,7 @@ body {
 .nav-menu a {
     text-decoration: none;
     color: var(--text-primary);
-    font-size: 0.7rem;
+    font-size: 0.56rem;
     font-weight: 500;
     transition: var(--transition);
     position: relative;
@@ -1068,7 +1068,8 @@ body {
     margin: 100px 0; /* 添加明显的上下边距，确保模块在页面中更突出 */
     background: rgba(255, 255, 255, 0.15); /* 稍微增加背景不透明度 */
     border-radius: var(--border-radius-large);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px); /* 添加 Safari 浏览器前缀 */
     border: 1px solid rgba(255, 255, 255, 0.3); /* 增加边框不透明度 */
     position: relative;
     overflow: hidden;
@@ -3396,3 +3397,18 @@ html {
 .char-21 { color: #32CD32 !important; }
 .char-22 { color: #FF4500 !important; }
 .char-23 { color: #00FF7F !important; }
+
+/* 锚点定位修复 - 为所有section添加scroll-margin-top */
+section[id] {
+    scroll-margin-top: 100px; /* 为锚点定位预留空间 */
+}
+
+/* 特别为contact部分优化 */
+section#contact {
+    scroll-margin-top: 90px; /* 根据导航栏高度调整 */
+}
+
+/* 为平滑滚动提供更好的体验 */
+html {
+    scroll-behavior: smooth;
+}
