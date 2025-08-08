@@ -3412,3 +3412,65 @@ section#contact {
 html {
     scroll-behavior: smooth;
 }
+
+/* 移动端表单优化 */
+@media (max-width: 768px) {
+    .contact-form {
+        padding: 25px 20px;
+        margin: 0 10px;
+    }
+    
+    .contact-form .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .contact-form input,
+    .contact-form select,
+    .contact-form textarea {
+        font-size: 16px; /* 防止iOS缩放 */
+        padding: 12px 15px;
+        border-radius: 8px;
+    }
+    
+    .contact-form .btn-primary {
+        font-size: 16px;
+        padding: 15px 30px;
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    .contact-form .form-group input.error,
+    .contact-form .form-group select.error,
+    .contact-form .form-group textarea.error {
+        border-color: #ff4444;
+        box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.2);
+    }
+    
+    .notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        font-size: 14px;
+        padding: 12px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .contact-form {
+        padding: 20px 15px;
+        margin: 0 5px;
+    }
+    
+    .contact-form h3 {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+    }
+    
+    .contact-form input,
+    .contact-form select,
+    .contact-form textarea {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+}

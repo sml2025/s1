@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(el);
     });
 
-    // 表单处理
+    // 表单处理 - 修复移动端提交问题
     const contactForm = document.querySelector('.contact-form form');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
@@ -114,53 +114,67 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             
-            let isValid = true;
-            const requiredFields = this.querySelectorAll('[required]');
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    isValid = false;
-                    field.style.borderColor = 'var(--error-color)';
-                } else {
-                    field.style.borderColor = '';
-                }
-            });
+            // 添加设备信息用于调试
+            data.device_model = navigator.userAgent || '未知设备';
+            data.location = window.location.hostname;
             
-            if (isValid) {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    const originalText = submitBtn.textContent;
-                    submitBtn.textContent = '提交中...';
-                    submitBtn.disabled = true;
-                    
-                    fetch('http://localhost:5001/submit_consultation', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data)
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            showNotification('咨询表单提交成功！我们会尽快联系您。', 'success');
-                            this.reset();
-                        } else {
-                            showNotification('提交失败: ' + result.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNotification('提交失败，请检查网络连接或联系管理员。', 'error');
-                    })
-                    .finally(() => {
-                        if (submitBtn) {
-                            submitBtn.textContent = originalText;
-                            submitBtn.disabled = false;
-                        }
-                    });
-                }
-            } else {
-                showNotification('请填写所有必填字段', 'error');
+            // 使用增强的表单验证
+            if (!validateMobileForm(this)) {
+                return;
+            }
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = '提交中...';
+                submitBtn.disabled = true;
+                
+                // 使用相对路径，兼容移动端和桌面端
+                const apiUrl = '/submit_consultation';
+                
+                // 添加超时处理
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+                
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success) {
+                        showNotification('咨询表单提交成功！我们会尽快联系您。', 'success');
+                        this.reset();
+                        // 移除所有错误样式
+                        this.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+                    } else {
+                        showNotification('提交失败: ' + (result.message || '未知错误'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('表单提交错误:', error);
+                    if (error.name === 'AbortError') {
+                        showNotification('网络超时，请检查网络连接', 'error');
+                    } else {
+                        showNotification('提交失败，请检查网络连接或稍后重试。', 'error');
+                    }
+                })
+                .finally(() => {
+                    if (submitBtn) {
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
             }
         });
     }
@@ -236,3 +250,65 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('网站初始化完成');
 });
+
+    // 移动端表单优化
+    function optimizeFormForMobile() {
+        const inputs = document.querySelectorAll('.contact-form input, .contact-form select, .contact-form textarea');
+        
+        inputs.forEach(input => {
+            // 防止iOS缩放
+            if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
+                input.addEventListener('focus', function() {
+                    document.body.style.zoom = '1';
+                });
+                
+                input.addEventListener('blur', function() {
+                    document.body.style.zoom = '';
+                });
+            }
+            
+            // 更好的触摸反馈
+            input.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+            });
+            
+            input.addEventListener('touchend', function() {
+                this.style.transform = '';
+            });
+        });
+    }
+
+    // 初始化移动端优化
+    if ('ontouchstart' in window) {
+        optimizeFormForMobile();
+    }
+    
+    // 添加表单验证增强
+    function validateMobileForm(form) {
+        const inputs = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            const value = input.value.trim();
+            if (!value) {
+                input.classList.add('error');
+                isValid = false;
+            } else {
+                input.classList.remove('error');
+            }
+            
+            // 特殊验证
+            if (input.name === 'text' && value) {
+                // 验证电话或微信格式
+                const phoneRegex = /^1[3-9]\d{9}$/;
+                const wechatRegex = /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/;
+                
+                if (!phoneRegex.test(value) && !wechatRegex.test(value)) {
+                    showNotification('请输入有效的手机号或微信号', 'error');
+                    isValid = false;
+                }
+            }
+        });
+        
+        return isValid;
+    }
