@@ -105,110 +105,62 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(el);
     });
 
-    // 表单提交处理 - GitHub Pages兼容版本
+    // 表单处理
     const contactForm = document.querySelector('.contact-form form');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
-            const data = {
-                name: formData.get('name'),
-                city: formData.get('city'),
-                contact: formData.get('text'),
-                consultation_type: formData.get('consultation_type'),
-                age_group: formData.get('age_group'),
-                description: formData.get('description'),
-                source: window.location.hostname.includes('github.io') ? 'GitHub Pages' : '本地服务器',
-                device: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop',
-                timestamp: new Date().toLocaleString('zh-CN')
-            };
+            const data = Object.fromEntries(formData);
             
-            // 验证表单
-            if (!data.name || !data.contact || !data.consultation_type || !data.age_group || !data.description) {
-                showNotification('❌ 请填写所有必填字段', 'error');
-                return;
-            }
+            let isValid = true;
+            const requiredFields = this.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = 'var(--error-color)';
+                } else {
+                    field.style.borderColor = '';
+                }
+            });
             
-            // 验证联系方式格式（手机号或微信号）
-            const contact = data.contact.trim();
-            const isPhone = /^1[3-9]\d{9}$/.test(contact);
-            const isWeChat = /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/.test(contact) || contact.length >= 6;
-            
-            if (!isPhone && !isWeChat) {
-                showNotification('❌ 请输入正确的手机号或微信号', 'error');
-                return;
-            }
-            
-            // 禁用提交按钮
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '处理中...';
-            submitBtn.disabled = true;
-            
-            // 检测环境并选择处理方式
-            if (window.location.hostname.includes('github.io')) {
-                // GitHub Pages环境：使用邮箱提交
-                const subject = encodeURIComponent(`教育咨询 - ${data.name}`);
-                const body = encodeURIComponent(
-                    `【教育咨询表单】\n\n` +
-                    `姓名：${data.name}\n` +
-                    `城市：${data.city}\n` +
-                    `联系方式：${data.contact}\n` +
-                    `咨询类型：${data.consultation_type}\n` +
-                    `年龄段：${data.age_group}\n` +
-                    `需求描述：${data.description}\n\n` +
-                    `设备信息：${data.device}\n` +
-                    `提交时间：${data.timestamp}\n` +
-                    `来源：${data.source}`
-                );
-                
-                const mailtoLink = `mailto:kaiwen0151@163.com?subject=${subject}&body=${body}`;
-                
-                showNotification('✅ 咨询信息已准备完毕！正在跳转到邮箱...', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = mailtoLink;
-                    this.reset();
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                }, 1500);
-                
+            if (isValid) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = '提交中...';
+                    submitBtn.disabled = true;
+                    
+                    fetch('http://localhost:5001/submit_consultation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            showNotification('咨询表单提交成功！我们会尽快联系您。', 'success');
+                            this.reset();
+                        } else {
+                            showNotification('提交失败: ' + result.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('提交失败，请检查网络连接或联系管理员。', 'error');
+                    })
+                    .finally(() => {
+                        if (submitBtn) {
+                            submitBtn.textContent = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    });
+                }
             } else {
-                // 本地服务器环境：使用后端API
-                fetch('/submit_consultation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    showNotification('✅ 提交成功！我们会尽快联系您', 'success');
-                    this.reset();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    let errorMsg = '提交失败，请稍后重试';
-                    if (error.name === 'AbortError') {
-                        errorMsg = '请求超时，请检查网络连接';
-                    } else if (error.message.includes('HTTP error')) {
-                        errorMsg = '服务器错误，请稍后重试';
-                    } else if (error.message.includes('Failed to fetch')) {
-                        errorMsg = '网络连接错误，请检查网络';
-                    }
-                    showNotification('❌ ' + errorMsg, 'error');
-                })
-                .finally(() => {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                });
+                showNotification('请填写所有必填字段', 'error');
             }
         });
     }
@@ -284,65 +236,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('网站初始化完成');
 });
-
-    // 移动端表单优化
-    function optimizeFormForMobile() {
-        const inputs = document.querySelectorAll('.contact-form input, .contact-form select, .contact-form textarea');
-        
-        inputs.forEach(input => {
-            // 防止iOS缩放
-            if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA') {
-                input.addEventListener('focus', function() {
-                    document.body.style.zoom = '1';
-                });
-                
-                input.addEventListener('blur', function() {
-                    document.body.style.zoom = '';
-                });
-            }
-            
-            // 更好的触摸反馈
-            input.addEventListener('touchstart', function() {
-                this.style.transform = 'scale(0.98)';
-            });
-            
-            input.addEventListener('touchend', function() {
-                this.style.transform = '';
-            });
-        });
-    }
-
-    // 初始化移动端优化
-    if ('ontouchstart' in window) {
-        optimizeFormForMobile();
-    }
-    
-    // 添加表单验证增强
-    function validateMobileForm(form) {
-        const inputs = form.querySelectorAll('[required]');
-        let isValid = true;
-        
-        inputs.forEach(input => {
-            const value = input.value.trim();
-            if (!value) {
-                input.classList.add('error');
-                isValid = false;
-            } else {
-                input.classList.remove('error');
-            }
-            
-            // 特殊验证
-            if (input.name === 'text' && value) {
-                // 验证电话或微信格式
-                const phoneRegex = /^1[3-9]\d{9}$/;
-                const wechatRegex = /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/;
-                
-                if (!phoneRegex.test(value) && !wechatRegex.test(value)) {
-                    showNotification('请输入有效的手机号或微信号', 'error');
-                    isValid = false;
-                }
-            }
-        });
-        
-        return isValid;
-    }
