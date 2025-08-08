@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 确保解决15大教育痛点模块可见
+    setTimeout(function() {
+        const painPointsSection = document.getElementById('pain-points');
+        if (painPointsSection) {
+            painPointsSection.style.display = 'block';
+            painPointsSection.style.opacity = '1';
+            painPointsSection.style.visibility = 'visible';
+            painPointsSection.style.zIndex = '100';
+            console.log('痛点模块已设置为可见');
+        } else {
+            console.log('未找到痛点模块');
+        }
+    }, 1000);
 
     // 检查导航元素是否存在
     const navToggle = document.querySelector('.nav-toggle');
@@ -11,7 +24,33 @@ document.addEventListener('DOMContentLoaded', function() {
         navToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             navToggle.classList.toggle('active');
+
+            // 如果菜单是打开的，设置随机颜色
+            if (navMenu.classList.contains('active')) {
+                setRandomColorsToNavItems();
+            }
         });
+
+        // 生成随机颜色
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // 为导航项设置随机颜色
+        function setRandomColorsToNavItems() {
+            // 只在移动设备上应用
+            if (window.innerWidth <= 768) {
+                const navItems = navMenu.querySelectorAll('a');
+                navItems.forEach(item => {
+                    item.style.color = getRandomColor();
+                });
+            }
+        }
 
         // 滚动时导航栏样式变化
         window.addEventListener('scroll', function() {
@@ -113,9 +152,38 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (isValid) {
-                // 显示提交成功消息
-                showNotification('咨询表单已提交，我们会尽快与您联系！', 'success');
-                this.reset();
+                // 显示加载状态
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = '提交中...';
+                submitBtn.disabled = true;
+                
+                // 发送到后端
+                fetch('http://localhost:5001/submit_consultation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        showNotification('咨询表单提交成功！我们会尽快联系您。', 'success');
+                        this.reset(); // 重置表单
+                    } else {
+                        showNotification('提交失败: ' + result.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('提交失败，请检查网络连接或联系管理员。', 'error');
+                })
+                .finally(() => {
+                    // 恢复按钮状态
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                });
             } else {
                 showNotification('请填写所有必填字段', 'error');
             }
@@ -773,10 +841,87 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 增强的表单验证
+// 增强的表单验证和数据收集
 document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.querySelector('.contact-form form');
     if (contactForm) {
+        // 记录表单开始填写时间
+        const formStartTime = new Date().getTime();
+        
+        // 初始化设备信息
+        let deviceInfo = {
+            model: 'Unknown',
+            browser: navigator.userAgent,
+            ip: 'Unknown',
+            location: 'Unknown',
+            fillDuration: 0
+        };
+        
+        // 获取设备型号
+        function getDeviceModel() {
+            const userAgent = navigator.userAgent;
+            let model = 'Unknown';
+            
+            // 检测移动设备
+            if (/Mobile|Android|iOS|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/.test(userAgent)) {
+                // 检测iPhone
+                if (/iPhone/.test(userAgent)) {
+                    model = 'iPhone';
+                    const match = userAgent.match(/iPhone OS (\d+_\d+)/);
+                    if (match) model += ' ' + match[1].replace('_', '.');
+                }
+                // 检测iPad
+                else if (/iPad/.test(userAgent)) {
+                    model = 'iPad';
+                    const match = userAgent.match(/iPad OS (\d+_\d+)/);
+                    if (match) model += ' ' + match[1].replace('_', '.');
+                }
+                // 检测Android设备
+                else if (/Android/.test(userAgent)) {
+                    model = 'Android Device';
+                    const match = userAgent.match(/Android (\d+\.\d+)/);
+                    if (match) model += ' ' + match[1];
+                }
+            } else {
+                // 桌面设备
+                model = 'Desktop';
+                if (/Windows/.test(userAgent)) model = 'Windows PC';
+                else if (/Macintosh/.test(userAgent)) model = 'Macintosh';
+                else if (/Linux/.test(userAgent)) model = 'Linux PC';
+            }
+            
+            return model;
+        }
+        
+        // 获取位置信息
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        // 这里可以调用地理编码API将经纬度转换为具体位置
+                        // 为简化，我们暂时只存储经纬度
+                        deviceInfo.location = `Lat: ${lat}, Lng: ${lng}`;
+                    },
+                    function(error) {
+                        console.log('无法获取位置信息:', error.message);
+                        deviceInfo.location = '位置获取失败';
+                    },
+                    {
+                        timeout: 10000,  // 10秒超时
+                        enableHighAccuracy: true
+                    }
+                );
+            } else {
+                deviceInfo.location = '浏览器不支持位置获取';
+            }
+        }
+        
+        // 初始化设备信息
+        deviceInfo.model = getDeviceModel();
+        getLocation();
+        
         const inputs = contactForm.querySelectorAll('input, textarea, select');
         
         inputs.forEach(input => {
@@ -790,6 +935,54 @@ document.addEventListener('DOMContentLoaded', function() {
                     validateField(this);
                 }
             });
+        });
+        
+        // 表单提交处理
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 计算填写时长（秒）
+            const formEndTime = new Date().getTime();
+            deviceInfo.fillDuration = Math.round((formEndTime - formStartTime) / 1000);
+            
+            // 验证所有字段
+            let isFormValid = true;
+            inputs.forEach(input => {
+                validateField(input);
+                if (input.classList.contains('error')) {
+                    isFormValid = false;
+                }
+            });
+            
+            if (isFormValid) {
+                // 收集表单数据
+                const formData = new FormData(this);
+                
+                // 添加设备信息到表单数据
+                formData.append('device_model', deviceInfo.model);
+                formData.append('browser', deviceInfo.browser);
+                formData.append('fill_duration', deviceInfo.fillDuration);
+                formData.append('location', deviceInfo.location);
+                
+                // 提交表单数据到服务器
+                fetch('/submit_consultation', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('咨询提交成功！我们将尽快与您联系。', 'success');
+                        contactForm.reset();
+                    } else {
+                        showNotification('提交失败：' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('提交失败：网络错误', 'error');
+                    console.error('提交错误:', error);
+                });
+            }
         });
         
         function validateField(field) {

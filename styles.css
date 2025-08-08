@@ -147,10 +147,39 @@ body {
 .nav-logo {
     display: flex;
     align-items: center;
-    color: #fff;
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--primary-color);
+}
+
+.logo-text {
+    display: inline-flex;
+    align-items: center;
+}
+
+.char {
+    color: var(--text-primary);
+    display: inline-block;
+    margin: 0 1px;
+    animation: randomColor 8s infinite linear, wave 2s infinite ease-in-out;
+}
+
+/* 为每个字符设置不同的动画延迟 */
+.char-0 { animation-delay: 0s, 0s; }
+.char-1 { animation-delay: 0.5s, 0.1s; }
+.char-2 { animation-delay: 1s, 0.2s; }
+.char-3 { animation-delay: 1.5s, 0.3s; }
+.char-4 { animation-delay: 2s, 0.4s; }
+.char-5 { animation-delay: 2.5s, 0.5s; }
+.char-6 { animation-delay: 3s, 0.6s; }
+.char-7 { animation-delay: 3.5s, 0.7s; }
+.char-8 { animation-delay: 4s, 0.8s; }
+.char-9 { animation-delay: 4.5s, 0.9s; }
+.char-10 { animation-delay: 5s, 1s; }
+
+/* 波浪动画 */
+@keyframes wave {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 .nav-logo .logo-image {
@@ -182,11 +211,34 @@ body {
 
 .nav-menu a {
     text-decoration: none;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.7rem;
     font-weight: 500;
     transition: var(--transition);
     position: relative;
+    animation: randomColor 8s infinite linear;
+}
+
+/* 为每个导航项设置不同的动画延迟 */
+.nav-menu li:nth-child(1) a { animation-delay: 0s; }
+.nav-menu li:nth-child(2) a { animation-delay: 1s; }
+.nav-menu li:nth-child(3) a { animation-delay: 2s; }
+.nav-menu li:nth-child(4) a { animation-delay: 3s; }
+.nav-menu li:nth-child(5) a { animation-delay: 4s; }
+.nav-menu li:nth-child(6) a { animation-delay: 5s; }
+.nav-menu li:nth-child(7) a { animation-delay: 6s; }
+.nav-menu li:nth-child(8) a { animation-delay: 7s; }
+
+/* 随机颜色动画 */
+@keyframes randomColor {
+    0% { color: #FF5252; }
+    14% { color: #FF9800; }
+    28% { color: #FFEB3B; }
+    42% { color: #4CAF50; }
+    57% { color: #2196F3; }
+    71% { color: #9C27B0; }
+    85% { color: #E91E63; }
+    100% { color: #FF5252; }
 }
 
 .nav-menu a:hover {
@@ -570,8 +622,9 @@ body {
 .section-header h2 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 20px;
+    animation: randomColor 8s infinite linear;
 }
 
 .section-header p {
@@ -711,11 +764,10 @@ body {
 .services .section-header h2 {
     font-size: 3rem;
     margin-bottom: 20px;
-    background: linear-gradient(45deg, #FFFFFF, #FFB088);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
     text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    animation: randomColor 8s infinite linear;
+    animation-delay: 2s;
 }
 
 .services .section-header p {
@@ -1009,6 +1061,198 @@ body {
 }
 
 /* 教育成果 */
+
+/* 解决15大教育痛点 */
+.pain-points {
+    padding: 80px 0;
+    margin: 100px 0; /* 添加明显的上下边距，确保模块在页面中更突出 */
+    background: rgba(255, 255, 255, 0.15); /* 稍微增加背景不透明度 */
+    border-radius: var(--border-radius-large);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3); /* 增加边框不透明度 */
+    position: relative;
+    overflow: hidden;
+    z-index: 100; /* 显著提高层级 */
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.2); /* 添加明显阴影 */
+}
+
+/* 移除背景图，保持与教学模式一致 */
+/* .pain-points::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('xingkong2.PNG') no-repeat center center;
+    background-size: cover;
+    opacity: 0.3;
+    z-index: -1;
+} */
+
+.pain-points .section-header {
+    color: white;
+    text-align: center;
+    margin-bottom: 60px;
+    position: relative;
+    z-index: 2;
+}
+
+.pain-points .section-header h2 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.7);
+    font-weight: bold;
+    letter-spacing: 1px;
+    animation: randomColor 8s infinite linear;
+    animation-delay: 1s;
+}
+
+.pain-points .section-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* 痛点卡片网格 */
+.pain-points-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+/* 痛点卡片 */
+.pain-point-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 30px;
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+.pain-point-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #FF5252, #FF7043, #FFCA28);
+    transform: scaleX(0);
+    transition: var(--transition);
+}
+
+.pain-point-card:hover::before {
+    transform: scaleX(1);
+}
+
+.pain-point-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 112, 67, 0.1), transparent);
+    transform: rotate(45deg) translateX(-100%);
+    transition: var(--transition);
+}
+
+.pain-point-card:hover::after {
+    transform: rotate(45deg) translateX(100%);
+}
+
+.pain-point-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(255, 112, 67, 0.3);
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* 痛点编号 */
+.pain-point-number {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #FF5252, #FF7043);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(255, 82, 82, 0.3);
+}
+
+/* 痛点标题 */
+.pain-point-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #fff;
+    font-weight: 600;
+    position: relative;
+    padding-right: 50px;
+}
+
+/* 痛点内容 */
+.pain-point-content {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.pain-point-issue,
+.pain-point-solution,
+.pain-point-result {
+    margin-bottom: 15px;
+}
+
+.pain-point-issue h4,
+.pain-point-solution h4,
+.pain-point-result h4 {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.pain-point-issue h4 i {
+    color: #FF5252;
+    margin-right: 8px;
+}
+
+.pain-point-solution h4 i {
+    color: #4CAF50;
+    margin-right: 8px;
+}
+
+.pain-point-result h4 i {
+    color: #2196F3;
+    margin-right: 8px;
+}
+
+.pain-point-content p {
+    line-height: 1.6;
+}
+
+/* 教育成果 */
 .achievements {
     padding: 80px 0;
     background: rgba(0, 0, 0, 0.8);
@@ -1046,11 +1290,10 @@ body {
 .achievements .section-header h2 {
     font-size: 3rem;
     margin-bottom: 20px;
-    background: linear-gradient(45deg, #FFFFFF, #00f2fe);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
     text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    animation: randomColor 8s infinite linear;
+    animation-delay: 3s;
 }
 
 .achievements .section-header p {
@@ -1368,11 +1611,10 @@ body {
 .contact .section-header h2 {
     font-size: 3rem;
     margin-bottom: 20px;
-    background: linear-gradient(45deg, #FFFFFF, #A8E6CF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
     text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    animation: randomColor 8s infinite linear;
+    animation-delay: 4s;
 }
 
 .contact .section-header p {
@@ -1715,12 +1957,43 @@ body {
         left: -100%;
         top: 100px;
         flex-direction: column;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
         width: 100%;
         text-align: center;
         transition: 0.3s;
         box-shadow: var(--shadow-medium);
         padding: 20px 0;
+    }
+    
+    .nav-menu a {
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        padding: 10px 0;
+        display: block;
+        animation: randomColor 8s infinite;
+    }
+    
+    /* 为每个导航项添加不同的动画延迟 */
+    .nav-menu li:nth-child(1) a { animation-delay: 0s; }
+    .nav-menu li:nth-child(2) a { animation-delay: 1s; }
+    .nav-menu li:nth-child(3) a { animation-delay: 2s; }
+    .nav-menu li:nth-child(4) a { animation-delay: 3s; }
+    .nav-menu li:nth-child(5) a { animation-delay: 4s; }
+    .nav-menu li:nth-child(6) a { animation-delay: 5s; }
+    .nav-menu li:nth-child(7) a { animation-delay: 6s; }
+    .nav-menu li:nth-child(8) a { animation-delay: 7s; }
+    
+    /* 定义随机颜色动画 */
+    @keyframes randomColor {
+        0% { color: #FF5252; }
+        14% { color: #FF7043; }
+        28% { color: #FFCA28; }
+        42% { color: #4CAF50; }
+        57% { color: #2196F3; }
+        71% { color: #9C27B0; }
+        85% { color: #E91E63; }
+        100% { color: #FF5252; }
     }
 
     .nav-menu.active {

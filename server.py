@@ -4,7 +4,11 @@ import sqlite3
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
+
+# 设置北京时间时区
+beijing_tz = pytz.timezone('Asia/Shanghai')
 import os
 
 app = Flask(__name__, static_folder='.', static_url_path='/static')
@@ -43,7 +47,12 @@ def init_db():
                 consultation_type TEXT NOT NULL,
                 message TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status TEXT DEFAULT '新提交'
+                status TEXT DEFAULT '新提交',
+                device_model TEXT,
+                ip_address TEXT,
+                location TEXT,
+                browser TEXT,
+                fill_duration INTEGER
             )
         ''')
     else:
@@ -51,9 +60,24 @@ def init_db():
         cursor.execute("PRAGMA table_info(consultations)")
         columns = [column[1] for column in cursor.fetchall()]
         
+        # 重命名phone列为contact
         if 'phone' in columns and 'contact' not in columns:
-            # 重命名phone列为contact
             cursor.execute('ALTER TABLE consultations RENAME COLUMN phone TO contact')
+            columns.remove('phone')
+            columns.append('contact')
+
+        # 添加缺少的列
+        required_columns = [
+            ('device_model', 'TEXT'),
+            ('ip_address', 'TEXT'),
+            ('location', 'TEXT'),
+            ('browser', 'TEXT'),
+            ('fill_duration', 'INTEGER')
+        ]
+        
+        for column_name, column_type in required_columns:
+            if column_name not in columns:
+                cursor.execute(f'ALTER TABLE consultations ADD COLUMN {column_name} {column_type}')
     
     conn.commit()
     conn.close()
@@ -77,7 +101,7 @@ def send_email(consultation_data):
         邮箱: {consultation_data.get('email', '未提供')}
         咨询类型: {consultation_data['consultation_type']}
         咨询内容: {consultation_data.get('description', '无')}
-        提交时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        提交时间: {datetime.now(beijing_tz).strftime('%Y-%m-%d %H:%M:%S')}
         """
         
         # 创建邮件对象
@@ -116,15 +140,31 @@ def submit_consultation():
         # 保存到数据库
         conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
+        # 获取客户端信息
+        ip_address = request.remote_addr
+        browser = request.user_agent.string
+        device_model = data.get('device_model', '')
+        location = data.get('location', '')
+        fill_duration = data.get('fill_duration', 0)
+
         cursor.execute('''
-            INSERT INTO consultations (name, contact, email, consultation_type, message)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO consultations (
+                name, contact, email, consultation_type, message, timestamp, 
+                device_model, ip_address, location, browser, fill_duration
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['name'],
             data['text'],  # 使用text字段作为联系方式
             data.get('email', ''),
             data['consultation_type'],
-            data.get('description', '')  # 使用description字段作为咨询内容
+            data.get('description', ''),  # 使用description字段作为咨询内容
+            datetime.now(beijing_tz).strftime('%Y-%m-%d %H:%M:%S'),
+            device_model,
+            ip_address,
+            location,
+            browser,
+            fill_duration
         ))
         conn.commit()
         conn.close()
@@ -152,18 +192,18 @@ def get_consultations():
         cursor.execute('SELECT COUNT(*) FROM consultations')
         total = cursor.fetchone()[0]
         
-        cursor.execute('SELECT COUNT(*) FROM consultations WHERE DATE(timestamp) = DATE("now")')
+        cursor.execute('SELECT COUNT(*) FROM consultations WHERE DATE(timestamp) = DATE(datetime("now", "+8 hours"))')
         today = cursor.fetchone()[0]
         
         cursor.execute('SELECT COUNT(*) FROM consultations WHERE status = "新提交"')
         pending = cursor.fetchone()[0]
         
         # 获取本周咨询数
-        cursor.execute('SELECT COUNT(*) FROM consultations WHERE strftime("%W", timestamp) = strftime("%W", "now")')
+        cursor.execute('SELECT COUNT(*) FROM consultations WHERE strftime("%W", timestamp) = strftime("%W", datetime("now", "+8 hours"))')
         this_week = cursor.fetchone()[0]
         
         # 获取本月咨询数
-        cursor.execute('SELECT COUNT(*) FROM consultations WHERE strftime("%Y-%m", timestamp) = strftime("%Y-%m", "now")')
+        cursor.execute('SELECT COUNT(*) FROM consultations WHERE strftime("%Y-%m", timestamp) = strftime("%Y-%m", datetime("now", "+8 hours"))')
         this_month = cursor.fetchone()[0]
         
         # 获取咨询类型统计
@@ -683,6 +723,11 @@ def admin():
                             <th>邮箱</th>
                             <th>咨询类型</th>
                             <th>咨询内容</th>
+                            <th>来源设备型号</th>
+                            <th>来自IP</th>
+                            <th>来自地点</th>
+                            <th>来自浏览器</th>
+                            <th>填写时长</th>
                             <th>状态</th>
                             <th>操作</th>
                         </tr>
@@ -783,6 +828,11 @@ def admin():
                             <td>${consultation.email}</td>
                             <td>${consultation.consultation_type}</td>
                             <td>${consultation.message}</td>
+                            <td>${consultation.device_model || '-'}</td>
+                            <td>${consultation.ip_address || '-'}</td>
+                            <td>${consultation.location || '-'}</td>
+                            <td>${consultation.browser || '-'}</td>
+                            <td>${consultation.fill_duration ? consultation.fill_duration + '秒' : '-'}</td>
                             <td><span class="status-badge ${statusClass}">${consultation.status || '新提交'}</span></td>
                             <td class="action-cell">
                                 <button class="btn-edit" onclick="editStatus(${consultation.id})">编辑</button>
@@ -908,4 +958,4 @@ if __name__ == '__main__':
     print("用户名: kaiwen")
     print("密码: 11112222")
     
-    app.run(host='0.0.0.0', port=5003, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
