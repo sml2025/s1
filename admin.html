@@ -283,6 +283,15 @@
                 <h3 id="pendingConsultations">0</h3>
                 <p>待处理</p>
             </div>
+            <div class="stat-card">
+                <h3 id="avgBrowseDuration">0秒</h3>
+                <p>平均浏览时长</p>
+            </div>
+        </div>
+            <div class="stat-card">
+                <h3 id="avgBrowseDuration">0秒</h3>
+                <p>平均浏览时长</p>
+            </div>
         </div>
 
         <button class="refresh-btn" onclick="loadConsultations()">刷新数据</button>
@@ -298,6 +307,8 @@
                         <th>咨询类型</th>
                         <th>咨询内容</th>
                         <th>状态</th>
+                        <th>浏览时长</th>
+                        <th>填写时长</th>
                     </tr>
                 </thead>
                 <tbody id="consultationsTableBody">
@@ -371,6 +382,19 @@
             document.getElementById('totalConsultations').textContent = data.total || 0;
             document.getElementById('todayConsultations').textContent = data.today || 0;
             document.getElementById('pendingConsultations').textContent = data.pending || 0;
+
+            // 计算平均浏览时长
+            const consultationsWithBrowseDuration = data.consultations.filter(c => c.browse_duration);
+            if (consultationsWithBrowseDuration.length > 0) {
+                const totalBrowseDuration = consultationsWithBrowseDuration.reduce((sum, c) => {
+                    const duration = parseFloat(c.browse_duration.replace('秒', ''));
+                    return sum + (isNaN(duration) ? 0 : duration);
+                }, 0);
+                const avgBrowseDuration = totalBrowseDuration / consultationsWithBrowseDuration.length;
+                document.getElementById('avgBrowseDuration').textContent = avgBrowseDuration.toFixed(1) + '秒';
+            } else {
+                document.getElementById('avgBrowseDuration').textContent = '0秒';
+            }
         }
 
         // 更新咨询表格
@@ -389,11 +413,13 @@
                     row.innerHTML = `
                         <td>${new Date(consultation.timestamp).toLocaleString()}</td>
                         <td>${consultation.name}</td>
-                        <td>${consultation.phone}</td>
+                        <td>${consultation.contact}</td>
                         <td>${consultation.email}</td>
-                        <td>${consultation.consultationType}</td>
+                        <td>${consultation.consultation_type}</td>
                         <td>${consultation.message}</td>
                         <td>${consultation.status || '新提交'}</td>
+                        <td>${consultation.browse_duration || '未记录'}</td>
+                        <td>${consultation.fill_duration || '未记录'}</td>
                     `;
                     tableBody.appendChild(row);
                 });

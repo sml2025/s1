@@ -44,6 +44,8 @@ def init_db():
                 name TEXT NOT NULL,
                 contact TEXT NOT NULL,
                 email TEXT,
+                city TEXT,
+                age_group TEXT,
                 consultation_type TEXT NOT NULL,
                 message TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -52,7 +54,8 @@ def init_db():
                 ip_address TEXT,
                 location TEXT,
                 browser TEXT,
-                fill_duration INTEGER
+                fill_duration INTEGER,
+                browse_duration INTEGER
             )
         ''')
     else:
@@ -68,11 +71,14 @@ def init_db():
 
         # 添加缺少的列
         required_columns = [
+            ('city', 'TEXT'),
+            ('age_group', 'TEXT'),
             ('device_model', 'TEXT'),
             ('ip_address', 'TEXT'),
             ('location', 'TEXT'),
             ('browser', 'TEXT'),
-            ('fill_duration', 'INTEGER')
+            ('fill_duration', 'INTEGER'),
+            ('browse_duration', 'INTEGER')
         ]
         
         for column_name, column_type in required_columns:
@@ -97,8 +103,10 @@ def send_email(consultation_data):
         新的咨询表单提交：
         
         姓名: {consultation_data['name']}
+        城市: {consultation_data.get('city', '未提供')}
         联系方式: {consultation_data['text']}
         邮箱: {consultation_data.get('email', '未提供')}
+        年龄段: {consultation_data.get('age_group', '未提供')}
         咨询类型: {consultation_data['consultation_type']}
         咨询内容: {consultation_data.get('description', '无')}
         提交时间: {datetime.now(beijing_tz).strftime('%Y-%m-%d %H:%M:%S')}
@@ -131,8 +139,8 @@ def submit_consultation():
     try:
         data = request.get_json()
         
-        # 验证必填字段
-        required_fields = ['name', 'text', 'consultation_type']
+        # 验证必填字段（与前端表单一致）
+        required_fields = ['name', 'city', 'text', 'consultation_type', 'age_group', 'description']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'success': False, 'message': f'缺少必填字段: {field}'}), 400
@@ -146,17 +154,20 @@ def submit_consultation():
         device_model = data.get('device_model', '')
         location = data.get('location', '')
         fill_duration = data.get('fill_duration', 0)
+        browse_duration = data.get('browse_duration', 0)
 
         cursor.execute('''
             INSERT INTO consultations (
-                name, contact, email, consultation_type, message, timestamp, 
-                device_model, ip_address, location, browser, fill_duration
+                name, contact, email, city, age_group, consultation_type, message, timestamp, 
+                device_model, ip_address, location, browser, fill_duration, browse_duration
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['name'],
             data['text'],  # 使用text字段作为联系方式
             data.get('email', ''),
+            data.get('city', ''),
+            data.get('age_group', ''),
             data['consultation_type'],
             data.get('description', ''),  # 使用description字段作为咨询内容
             datetime.now(beijing_tz).strftime('%Y-%m-%d %H:%M:%S'),
@@ -164,7 +175,8 @@ def submit_consultation():
             ip_address,
             location,
             browser,
-            fill_duration
+            fill_duration,
+            browse_duration
         ))
         conn.commit()
         conn.close()
@@ -182,6 +194,7 @@ def get_consultations():
     """获取所有咨询数据"""
     try:
         conn = sqlite3.connect(DATABASE)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         # 获取所有咨询
@@ -212,18 +225,26 @@ def get_consultations():
         
         conn.close()
         
-        # 格式化数据
+        # 格式化数据（基于列名，避免列顺序问题）
         consultations_data = []
-        for consultation in consultations:
+        for row in consultations:
             consultations_data.append({
-                'id': consultation[0],
-                'name': consultation[1],
-                'contact': consultation[2],
-                'email': consultation[3],
-                'consultation_type': consultation[4],
-                'message': consultation[5],
-                'timestamp': consultation[6],
-                'status': consultation[7]
+                'id': row['id'],
+                'name': row['name'],
+                'contact': row['contact'],
+                'email': row['email'],
+                'city': row['city'] if 'city' in row.keys() else '',
+                'age_group': row['age_group'] if 'age_group' in row.keys() else '',
+                'consultation_type': row['consultation_type'],
+                'message': row['message'],
+                'timestamp': row['timestamp'],
+                'status': row['status'],
+                'device_model': row['device_model'] if 'device_model' in row.keys() else '',
+                'ip_address': row['ip_address'] if 'ip_address' in row.keys() else '',
+                'location': row['location'] if 'location' in row.keys() else '',
+                'browser': row['browser'] if 'browser' in row.keys() else '',
+                'fill_duration': row['fill_duration'] if 'fill_duration' in row.keys() else 0,
+                'browse_duration': row['browse_duration'] if 'browse_duration' in row.keys() else 0
             })
         
         return jsonify({
@@ -281,15 +302,18 @@ def export_consultations():
     """导出咨询数据"""
     try:
         conn = sqlite3.connect(DATABASE)
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM consultations ORDER BY timestamp DESC')
         consultations = cursor.fetchall()
         conn.close()
         
-        # 生成CSV格式数据
-        csv_data = "ID,姓名,联系方式,邮箱,咨询类型,咨询内容,提交时间,状态\n"
-        for consultation in consultations:
-            csv_data += f"{consultation[0]},{consultation[1]},{consultation[2]},{consultation[3]},{consultation[4]},{consultation[5]},{consultation[6]},{consultation[7]}\n"
+        # 生成CSV格式数据（基于列名，避免列顺序问题）
+        csv_data = "ID,姓名,联系方式,邮箱,城市,年龄段,咨询类型,咨询内容,提交时间,状态\n"
+        for row in consultations:
+            city = row['city'] if 'city' in row.keys() else ''
+            age_group = row['age_group'] if 'age_group' in row.keys() else ''
+            csv_data += f"{row['id']},{row['name']},{row['contact']},{row['email']},{city},{age_group},{row['consultation_type']},{row['message']},{row['timestamp']},{row['status']}\n"
         
         return Response(
             csv_data,
@@ -722,6 +746,8 @@ def admin():
                             <th>联系方式</th>
                             <th>邮箱</th>
                             <th>咨询类型</th>
+                            <th>城市</th>
+                            <th>年龄段</th>
                             <th>咨询内容</th>
                             <th>来源设备型号</th>
                             <th>来自IP</th>
@@ -827,6 +853,8 @@ def admin():
                             <td>${consultation.contact}</td>
                             <td>${consultation.email}</td>
                             <td>${consultation.consultation_type}</td>
+                            <td>${consultation.city || '-'}</td>
+                            <td>${consultation.age_group || '-'}</td>
                             <td>${consultation.message}</td>
                             <td>${consultation.device_model || '-'}</td>
                             <td>${consultation.ip_address || '-'}</td>
@@ -954,8 +982,8 @@ if __name__ == '__main__':
     
     # 启动服务器
     print("后台管理系统启动中...")
-    print("访问地址: http://localhost:5001/admin")
+    print("访问地址: http://localhost:5002/admin")
     print("用户名: kaiwen")
     print("密码: 11112222")
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5002, debug=True)
