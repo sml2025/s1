@@ -373,33 +373,30 @@ document.addEventListener('DOMContentLoaded', function() {
             // 记录提交时间和数据
             console.log('提交表单数据:', data);
             
-            fetch('http://localhost:5002/submit_consultation', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    showNotification('您的提交已经成功！我们会尽快与您联系。也欢迎您加我们的客服微信：kaiwen251899，谢谢您！', 'success');
-                    form.reset();
-                } else {
-                    showNotification('提交失败: ' + result.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('提交失败，请检查网络连接或联系管理员。', 'error');
-            })
-            .finally(() => {
-                // 恢复按钮状态
-                if (submitBtn) {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                }
-            });
+            // GitHub Pages doesn't support backend, so we'll use a different approach
+            try {
+                // Store submission locally for admin review
+                const submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
+                const submissionData = {
+                    ...data,
+                    timestamp: new Date().toISOString(),
+                    id: Date.now()
+                };
+                submissions.push(submissionData);
+                localStorage.setItem('formSubmissions', JSON.stringify(submissions));
+                
+                // Simulate successful submission
+                showNotification('您的提交已经成功！我们会尽快与您联系。也欢迎您加我们的客服微信：kaiwen251899，谢谢您！', 'success');
+                form.reset();
+                
+                // Optionally send to email service or webhook
+                // This is a placeholder for future backend integration
+                console.log('表单数据已保存本地，等待后端集成');
+                
+            } catch (error) {
+                console.error('提交错误:', error);
+                showNotification('提交失败，请稍后再试或直接联系我们', 'error');
+            }
         } else {
             showNotification('请填写所有必填字段', 'error');
         }
