@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('提交表单数据:', data);
             
             const isGitHubPages = location.hostname.endsWith('github.io');
-            const BACKEND_URL = 'http://localhost:5002';
+            const BACKEND_URL = isGitHubPages ? 'https://sml25-backend.onrender.com' : 'http://localhost:5002';
             
             if (!isGitHubPages) {
                 fetch(`${BACKEND_URL}/submit_consultation`, {
